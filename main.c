@@ -1,21 +1,25 @@
 const char* message = "This is a message that I have made!!!";
 
 unsigned int len(const char* str) {
-    unsigned int res;
+    // Needs to be long type so it get's assigned to a 64bit register
+    // This is necesarry so that the 3. line will compile
+    // You can't index a 64bit address with a 32bit register
+    unsigned long res;
     asm (
-        "xor %%rax, %%rax\n" // Set rax to 0
+        "xor %[res], %[res]\n" // Set rax to 0
         ".loop_%=:\t"
-        "movb (%[str], %%rax, 1), %%bl\n\t" // move the next byte of the string to bl
+        "movb (%[str], %[res], 1), %%bl\n\t" // move the next byte of the string to bl
         "cmpb $0, %%bl\n\t" // Check if it's \0
         "je .done_%=\n\t"
-        "inc %%rax\n\t" // Increment rax
+        "inc %[res]\n\t" // Increment rax
         "jmp .loop_%=\n"
-        ".done_%=:\n\t"
-        "movl %%eax, %[res]"
+        ".done_%=:"
         : [res] "=r" (res)
         : [str] "r" (str)
         : "%bl"
     );
+
+    // Implicit cast from ulong -> uint
     return res;
 }
 
