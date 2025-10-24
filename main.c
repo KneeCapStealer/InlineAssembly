@@ -1,7 +1,7 @@
 const char* message = "This is a message that I have made!!!";
 
-unsigned long len(const char* str) {
-    unsigned long len;
+unsigned int len(const char* str) {
+    unsigned int res;
     asm (
         "xor %%rax, %%rax\n" // Set rax to 0
         ".loop_%=:\t"
@@ -10,14 +10,13 @@ unsigned long len(const char* str) {
         "je .done_%=\n\t"
         "inc %%rax\n\t" // Increment rax
         "jmp .loop_%=\n"
-        ".done_%=:\t"
-        "movq %%rax, %[len]" // Move the rax register to the result variable
-        : [len] "=r" (len)
+        ".done_%=:\n\t"
+        "movl %%eax, %[res]"
+        : [res] "=r" (res)
         : [str] "r" (str)
-        : "%bl", "%rax"
+        : "%bl"
     );
-
-    return len;
+    return res;
 }
 
 
@@ -27,12 +26,12 @@ int main() {
         // same as `%rcx = len(message)`
         "movq %[msg], %%rdi\n\t"
         "callq len\n\t"
-        "movq %%rax, %%rcx\n\t"
+        "movl %%eax, %%ecx\n\t"
 
         "movq $1, %%rax\n\t" // Write syscall
         "movq $1, %%rdi\n\t" // 1 means stdout meaning the terminal
         "movq %[msg], %%rsi\n\t" // The address of the message
-        "movq %%rcx, %%rdx\n\t" // The length of the message
+        "movl %%ecx, %%edx\n\t" // The length of the message
         "syscall"
         :
         : [msg] "r"  (message)
